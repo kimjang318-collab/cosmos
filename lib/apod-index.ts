@@ -78,9 +78,11 @@ export async function writeIndex(entries: ApodIndexEntry[]): Promise<void> {
 
 export function searchIndex(entries: ApodIndexEntry[], query: string) {
   const needle = query.toLowerCase();
-  return entries.filter(
-    (entry) =>
-      entry.title.toLowerCase().includes(needle) ||
-      entry.explanation.toLowerCase().includes(needle)
-  );
+  return entries
+    .filter(
+      (entry) =>
+        entry.title.toLowerCase().includes(needle) ||
+        entry.explanation.toLowerCase().includes(needle)
+    )
+    .sort((a, b) => (a.date < b.date ? 1 : -1));
 }
