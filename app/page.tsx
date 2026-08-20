@@ -1,47 +1,6 @@
-type ApodPhoto = {
-  date: string;
-  title: string;
-  explanation: string;
-  media_type: string;
-  url: string;
-  hdurl?: string;
-};
-
-type ApodResult =
-  | { success: true; photo: ApodPhoto }
-  | { success: false; status: number };
-
-const DIRECT_VIDEO_EXTENSIONS = [".mp4", ".mov", ".webm", ".ogv"];
-
-// NASA APOD의 video url은 유튜브 등 외부 플랫폼 embed 링크이거나,
-// apod.nasa.gov가 직접 호스팅하는 영상 파일(mp4 등)일 수 있다.
-// 후자는 iframe이 아니라 video 태그로 재생해야 화면에 나온다.
-function isDirectVideoFile(url: string) {
-  const path = url.split("?")[0].toLowerCase();
-  return DIRECT_VIDEO_EXTENSIONS.some((ext) => path.endsWith(ext));
-}
-
-const MIN_DATE = "1995-06-16";
-
-function todayString() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-async function fetchApod(date?: string): Promise<ApodResult> {
-  const apiKey = process.env.NASA_API_KEY || "DEMO_KEY";
-  const params = new URLSearchParams({ api_key: apiKey });
-  if (date) {
-    params.set("date", date);
-  }
-  const res = await fetch(`https://api.nasa.gov/planetary/apod?${params}`);
-
-  if (!res.ok) {
-    return { success: false, status: res.status };
-  }
-
-  const photo = (await res.json()) as ApodPhoto;
-  return { success: true, photo };
-}
+import { ApodImage } from "@/components/apod-image";
+import { FailureNotice } from "@/components/failure-notice";
+import { MIN_DATE, fetchApod, isDirectVideoFile, todayString } from "@/lib/apod";
 
 export default async function Home({ searchParams }: PageProps<"/">) {
   const { date } = await searchParams;
@@ -69,15 +28,22 @@ export default async function Home({ searchParams }: PageProps<"/">) {
             보기
           </button>
         </form>
+        <form action="/search" className="flex items-center gap-2">
+          <input
+            type="search"
+            name="q"
+            placeholder="키워드로 찾기 (예: mars)"
+            className="rounded-md border border-zinc-300 px-2 py-1 text-sm text-black dark:border-zinc-700 dark:bg-black dark:text-zinc-50"
+          />
+          <button
+            type="submit"
+            className="rounded-md bg-zinc-900 px-3 py-1 text-sm font-medium text-white dark:bg-zinc-50 dark:text-black"
+          >
+            검색
+          </button>
+        </form>
         {!result.success ? (
-          <>
-            <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
-              오늘의 우주 사진을 가져오지 못했어요
-            </h1>
-            <p className="text-zinc-600 dark:text-zinc-400">
-              잠시 후 다시 시도해 주세요. (오류 코드: {result.status})
-            </p>
-          </>
+          <FailureNotice status={result.status} />
         ) : (
           <>
             <p className="text-sm text-zinc-500 dark:text-zinc-400">
@@ -87,9 +53,9 @@ export default async function Home({ searchParams }: PageProps<"/">) {
               {result.photo.title}
             </h1>
             {result.photo.media_type === "image" ? (
-              // eslint-disable-next-line @next/next/no-img-element -- NASA APOD 이미지는 매일 임의의 외부 도메인에서 오므로 next/image 도메인 허용 목록으로 다루지 않는다.
-              <img
+              <ApodImage
                 src={result.photo.hdurl ?? result.photo.url}
+                fallbackSrc={result.photo.url}
                 alt={result.photo.title}
                 className="max-h-[70vh] w-full rounded-lg object-contain"
               />
