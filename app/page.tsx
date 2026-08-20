@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { ApodImage } from "@/components/apod-image";
 import { FailureNotice } from "@/components/failure-notice";
+import { FavoriteButton } from "@/components/favorite-button";
 import { MIN_DATE, fetchApod, isDirectVideoFile, todayString } from "@/lib/apod";
 
 export default async function Home({ searchParams }: PageProps<"/">) {
@@ -19,7 +21,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
             defaultValue={selectedDate ?? today}
             min={MIN_DATE}
             max={today}
-            className="rounded-md border border-zinc-300 px-2 py-1 text-sm text-black dark:border-zinc-700 dark:bg-black dark:text-zinc-50"
+            className="w-60 rounded-md border border-zinc-300 px-2 py-1 text-sm text-black dark:border-zinc-700 dark:bg-black dark:text-zinc-50"
           />
           <button
             type="submit"
@@ -33,7 +35,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
             type="search"
             name="q"
             placeholder="키워드로 찾기 (예: mars)"
-            className="rounded-md border border-zinc-300 px-2 py-1 text-sm text-black dark:border-zinc-700 dark:bg-black dark:text-zinc-50"
+            className="w-60 rounded-md border border-zinc-300 px-2 py-1 text-sm text-black dark:border-zinc-700 dark:bg-black dark:text-zinc-50"
           />
           <button
             type="submit"
@@ -42,16 +44,22 @@ export default async function Home({ searchParams }: PageProps<"/">) {
             검색
           </button>
         </form>
+        <Link
+          href="/favorites"
+          className="rounded-md bg-zinc-900 px-3 py-1 text-sm font-medium text-white dark:bg-zinc-50 dark:text-black"
+        >
+          즐겨찾기
+        </Link>
         {!result.success ? (
           <FailureNotice status={result.status} />
         ) : (
           <>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              {result.photo.date}
-            </p>
-            <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
-              {result.photo.title}
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
+                {result.photo.title}
+              </h1>
+              <FavoriteButton date={result.photo.date} title={result.photo.title} />
+            </div>
             {result.photo.media_type === "image" ? (
               <ApodImage
                 src={result.photo.hdurl ?? result.photo.url}
