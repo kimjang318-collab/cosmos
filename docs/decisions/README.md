@@ -1,1 +1,3 @@
 - [apod-explanation-language](apod-explanation-language.md) — Read when adding translation, simplification, or AI-based rewriting of the APOD explanation text.
+- [apod-search-scope](apod-search-scope.md) — Read when changing how far back keyword search reaches, or before adding persistent storage for the full APOD archive.
+- [apod-popularity-metric](apod-popularity-metric.md) — Read before adding any "popular" or "most viewed" APOD feature.
