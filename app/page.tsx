@@ -1,68 +1,125 @@
-import Image from "next/image";
+type ApodPhoto = {
+  date: string;
+  title: string;
+  explanation: string;
+  media_type: string;
+  url: string;
+  hdurl?: string;
+};
 
-export default function Home() {
+type ApodResult =
+  | { success: true; photo: ApodPhoto }
+  | { success: false; status: number };
+
+const DIRECT_VIDEO_EXTENSIONS = [".mp4", ".mov", ".webm", ".ogv"];
+
+// NASA APOD의 video url은 유튜브 등 외부 플랫폼 embed 링크이거나,
+// apod.nasa.gov가 직접 호스팅하는 영상 파일(mp4 등)일 수 있다.
+// 후자는 iframe이 아니라 video 태그로 재생해야 화면에 나온다.
+function isDirectVideoFile(url: string) {
+  const path = url.split("?")[0].toLowerCase();
+  return DIRECT_VIDEO_EXTENSIONS.some((ext) => path.endsWith(ext));
+}
+
+const MIN_DATE = "1995-06-16";
+
+function todayString() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+async function fetchApod(date?: string): Promise<ApodResult> {
+  const apiKey = process.env.NASA_API_KEY || "DEMO_KEY";
+  const params = new URLSearchParams({ api_key: apiKey });
+  if (date) {
+    params.set("date", date);
+  }
+  const res = await fetch(`https://api.nasa.gov/planetary/apod?${params}`);
+
+  if (!res.ok) {
+    return { success: false, status: res.status };
+  }
+
+  const photo = (await res.json()) as ApodPhoto;
+  return { success: true, photo };
+}
+
+export default async function Home({ searchParams }: PageProps<"/">) {
+  const { date } = await searchParams;
+  const selectedDate = typeof date === "string" ? date : undefined;
+  const today = todayString();
+
+  const result = await fetchApod(selectedDate);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="flex flex-1 flex-col items-center justify-center bg-zinc-50 font-sans dark:bg-black">
+      <main className="flex w-full max-w-3xl flex-1 flex-col items-center gap-6 bg-white px-16 py-32 text-center dark:bg-black">
+        <form action="/" className="flex items-center gap-2">
+          <input
+            type="date"
+            name="date"
+            defaultValue={selectedDate ?? today}
+            min={MIN_DATE}
+            max={today}
+            className="rounded-md border border-zinc-300 px-2 py-1 text-sm text-black dark:border-zinc-700 dark:bg-black dark:text-zinc-50"
+          />
+          <button
+            type="submit"
+            className="rounded-md bg-zinc-900 px-3 py-1 text-sm font-medium text-white dark:bg-zinc-50 dark:text-black"
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+            보기
+          </button>
+        </form>
+        {!result.success ? (
+          <>
+            <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
+              오늘의 우주 사진을 가져오지 못했어요
+            </h1>
+            <p className="text-zinc-600 dark:text-zinc-400">
+              잠시 후 다시 시도해 주세요. (오류 코드: {result.status})
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+              {result.photo.date}
+            </p>
+            <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
+              {result.photo.title}
+            </h1>
+            {result.photo.media_type === "image" ? (
+              // eslint-disable-next-line @next/next/no-img-element -- NASA APOD 이미지는 매일 임의의 외부 도메인에서 오므로 next/image 도메인 허용 목록으로 다루지 않는다.
+              <img
+                src={result.photo.hdurl ?? result.photo.url}
+                alt={result.photo.title}
+                className="max-h-[70vh] w-full rounded-lg object-contain"
+              />
+            ) : result.photo.media_type === "video" ? (
+              isDirectVideoFile(result.photo.url) ? (
+                <video
+                  src={result.photo.url}
+                  controls
+                  className="aspect-video w-full rounded-lg"
+                />
+              ) : (
+                <iframe
+                  src={result.photo.url}
+                  title={result.photo.title}
+                  allow="encrypted-media; picture-in-picture"
+                  allowFullScreen
+                  className="aspect-video w-full rounded-lg"
+                />
+              )
+            ) : (
+              <p className="text-zinc-600 dark:text-zinc-400">
+                오늘은 사진도 영상도 아닌 형식이에요. 다음에 다시 확인해
+                주세요.
+              </p>
+            )}
+            <p className="text-left text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+              {result.photo.explanation}
+            </p>
+          </>
+        )}
       </main>
     </div>
   );
