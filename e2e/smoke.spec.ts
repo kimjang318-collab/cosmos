@@ -16,3 +16,17 @@ test("홈 화면이 열리고 오늘의 우주 사진 또는 안내 문구가 �
 
   await expect(photo.or(video).or(failureNotice)).toBeVisible();
 });
+
+test("날짜를 선택하면 그 날짜의 사진으로 바뀌고 주소에 남는다", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  await page.getByRole("textbox").fill("2020-01-01");
+  await page.getByRole("button", { name: "보기" }).click();
+
+  await expect(page).toHaveURL(/date=2020-01-01/);
+  await expect(page.getByText("2020-01-01").first()).toBeVisible({
+    timeout: 30_000,
+  });
+});

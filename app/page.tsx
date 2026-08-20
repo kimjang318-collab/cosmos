@@ -21,11 +21,19 @@ function isDirectVideoFile(url: string) {
   return DIRECT_VIDEO_EXTENSIONS.some((ext) => path.endsWith(ext));
 }
 
-async function fetchTodayApod(): Promise<ApodResult> {
+const MIN_DATE = "1995-06-16";
+
+function todayString() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+async function fetchApod(date?: string): Promise<ApodResult> {
   const apiKey = process.env.NASA_API_KEY || "DEMO_KEY";
-  const res = await fetch(
-    `https://api.nasa.gov/planetary/apod?api_key=${apiKey}`
-  );
+  const params = new URLSearchParams({ api_key: apiKey });
+  if (date) {
+    params.set("date", date);
+  }
+  const res = await fetch(`https://api.nasa.gov/planetary/apod?${params}`);
 
   if (!res.ok) {
     return { success: false, status: res.status };
@@ -35,12 +43,32 @@ async function fetchTodayApod(): Promise<ApodResult> {
   return { success: true, photo };
 }
 
-export default async function Home() {
-  const result = await fetchTodayApod();
+export default async function Home({ searchParams }: PageProps<"/">) {
+  const { date } = await searchParams;
+  const selectedDate = typeof date === "string" ? date : undefined;
+  const today = todayString();
+
+  const result = await fetchApod(selectedDate);
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center bg-zinc-50 font-sans dark:bg-black">
       <main className="flex w-full max-w-3xl flex-1 flex-col items-center gap-6 bg-white px-16 py-32 text-center dark:bg-black">
+        <form action="/" className="flex items-center gap-2">
+          <input
+            type="date"
+            name="date"
+            defaultValue={selectedDate ?? today}
+            min={MIN_DATE}
+            max={today}
+            className="rounded-md border border-zinc-300 px-2 py-1 text-sm text-black dark:border-zinc-700 dark:bg-black dark:text-zinc-50"
+          />
+          <button
+            type="submit"
+            className="rounded-md bg-zinc-900 px-3 py-1 text-sm font-medium text-white dark:bg-zinc-50 dark:text-black"
+          >
+            보기
+          </button>
+        </form>
         {!result.success ? (
           <>
             <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
