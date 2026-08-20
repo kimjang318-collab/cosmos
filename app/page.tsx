@@ -1,6 +1,7 @@
 type ApodPhoto = {
   date: string;
   title: string;
+  explanation: string;
   media_type: string;
   url: string;
   hdurl?: string;
@@ -86,6 +87,9 @@ export default async function Home() {
                 주세요.
               </p>
             )}
+            <p className="text-left text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+              {result.photo.explanation}
+            </p>
           </>
         )}
       </main>
