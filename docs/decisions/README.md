@@ -1,0 +1,1 @@
+- [apod-explanation-language](apod-explanation-language.md) — Read when adding translation, simplification, or AI-based rewriting of the APOD explanation text.
