@@ -12,6 +12,42 @@ Next.js 16 (App Router) · React 19 · Tailwind CSS 4 · shadcn/ui · Bun · Vit
 
 ## 시작하기
 
+### 사전 요구사항
+
+- [Bun](https://bun.sh) 설치 필요 (`npm`/`yarn` 불가)
+
+```bash
+# Bun 설치 (macOS/Linux)
+curl -fsSL https://bun.sh/install | bash
+
+# Bun 설치 (Windows)
+powershell -c "irm bun.sh/install.ps1 | iex"
+```
+
+### 환경 변수 설정
+
+이 프로젝트는 NASA API, Vercel Blob 등 외부 서비스를 사용합니다. `.env.local`이 없으면 검색 등 주요 기능이 동작하지 않습니다.
+
+**방법 1: Vercel CLI로 자동 가져오기 (권장)**
+
+```bash
+npm i -g vercel   # Vercel CLI 설치
+vercel link       # 프로젝트 연결
+vercel env pull .env.local
+```
+
+**방법 2: 수동 생성**
+
+`.env.local` 파일을 직접 만들고 아래 값을 채웁니다.
+
+```
+NASA_API_KEY=           # https://api.nasa.gov 에서 발급
+KJ_READ_WRITE_TOKEN=    # Vercel Blob 스토어 RW 토큰
+CRON_SECRET=            # 임의의 비밀값
+```
+
+### 설치 및 실행
+
 ```bash
 bun install
 bun dev
