@@ -14,6 +14,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center bg-zinc-50 font-sans dark:bg-black">
       <main className="flex w-full max-w-3xl flex-1 flex-col items-center gap-6 bg-white px-16 py-32 text-center dark:bg-black">
+        <p className="text-[20px] text-zinc-400 italic">For my son, 김시원</p>
         <form action="/" className="flex items-center gap-2">
           <input
             type="date"
